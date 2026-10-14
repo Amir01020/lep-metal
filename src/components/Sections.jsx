@@ -1,120 +1,93 @@
-import { useState } from 'react';
-import { hero, products, about, advantages, process, MAX_FILE_MB, FILE_ACCEPT } from '../data';
-import { useLeadForm } from '../lib/form';
-import Icon from '../lib/Icon';
-import { Button, SectionHead, Field, PhoneInput, FormMeta, FormStatus, PhotoPlaceholder } from './ui';
-import { TowerArt, ProductArt } from './Art';
+import { useEffect, useRef, useState } from 'react';
+import { hero, intro, statement, products, projects, numbers, site } from '../data';
+import { gsap, splitLines } from '../lib/motion';
+import { Button, Arrow } from './ui';
+import { QuoteForm } from './QuoteForm';
+import { Wordmark } from './Header';
 
-const base = import.meta.env.BASE_URL;
+/* ---------- Первый экран: фото на всю ширину ---------- */
+export function Hero({ onQuote }) {
+  const root = useRef(null);
+  useEffect(() => {
+    const el = root.current;
+    const lines = splitLines(el.querySelector('.hero__title'));
+    const ctx = gsap.context(() => {
+      gsap.fromTo('.hero__bg img', { scale: 1.2 }, { scale: 1, duration: 2.2, ease: 'expo.out' });
+      gsap.fromTo(lines, { yPercent: 110 }, { yPercent: 0, duration: 1.3, ease: 'expo.out', stagger: 0.08, delay: 0.2 });
+      gsap.fromTo('.hero__fade', { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, ease: 'power3.out', stagger: 0.1, delay: 0.6 });
+      gsap.to('.hero__bg', { yPercent: 20, ease: 'none', scrollTrigger: { trigger: el, start: 'top top', end: 'bottom top', scrub: true } });
+    }, el);
+    return () => ctx.revert();
+  }, []);
 
-/* ---------- 1. Hero ---------- */
-export function Hero() {
   return (
-    <section className="hero hero--lep" id="hero">
-      <div className="hero__media" aria-hidden="true">
-        {hero.photo ? <img className="hero__photo" src={base + hero.photo} alt="" /> : (
-          <>
-            <div className="hero__lamp hero__lamp--moon" />
-            <TowerArt />
-          </>
-        )}
-      </div>
-      <div className="container hero__inner">
-        <div className="hero__content">
-          <span className="eyebrow">{hero.eyebrow}</span>
-          <h1 className="hero__title">
-            {hero.titleStart}<em>{hero.titleAccent}</em>{hero.titleEnd}
-          </h1>
-          <p className="hero__text">{hero.text}</p>
-          <div className="hero__actions">
-            <Button href="#order" arrow>Запросить расчёт</Button>
-            <Button href="#catalog" variant="ghost">Каталог продукции</Button>
-          </div>
-        </div>
-        <ul className="hero__features">
-          {hero.features.map((f) => (
-            <li key={f.icon}>
-              <span className="ico"><Icon name={f.icon} /></span>
-              <span>{f.text[0]}<br />{f.text[1]}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- 2. Каталог ---------- */
-export function Catalog({ onRequest }) {
-  return (
-    <section className="section section--deep" id="catalog">
-      <div className="container">
-        <SectionHead
-          className="section__head--split"
-          eyebrow="Каталог продукции"
-          title={`${products.length} видов продукции для ЛЭП`}
-          subtitle="Изготовим типовые изделия по сериям или по индивидуальному чертежу заказчика."
-        >
-          <div className="pill-note">
-            <Icon name="tower" />
-            <span>ВЛ 0,4-220 кВ<br />по ГОСТ и чертежам</span>
-          </div>
-        </SectionHead>
-        <div className="catalog catalog--4">
-          {products.slice(0, 7).map((p) => (
-            <article className="card reveal" key={p.id}>
-              <div className="card__gallery">
-                <div className="card__slide is-active">
-                  {p.image ? <img src={base + p.image} alt={p.name} loading="lazy" /> : <ProductArt kind={p.kind} />}
-                </div>
-                <span className="card__tag">{p.tag}</span>
-              </div>
-              <div className="card__body">
-                <h3 className="card__title">{p.name}</h3>
-                <p className="card__purpose">{p.purpose}</p>
-                <ul className="card__specs">
-                  {p.specs.map(([k, v]) => <li key={k}><span>{k}</span><span>{v}</span></li>)}
-                </ul>
-                <div className="card__footer">
-                  <Button as="button" type="button" variant="outline" arrow className="btn--block" onClick={() => onRequest(p.name)}>
-                    Запросить расчёт
-                  </Button>
-                </div>
-              </div>
-            </article>
-          ))}
-          <article className="card card--cta reveal">
-            <div className="card__body">
-              <span className="ico"><Icon name="file" /></span>
-              <h3 className="card__title">Есть чертёж?</h3>
-              <p className="card__purpose">Пришлите чертёж или спецификацию - рассчитаем стоимость и сроки в течение 1 рабочего дня.</p>
-              <Button href="#order" arrow className="btn--block">Отправить чертёж</Button>
-            </div>
-          </article>
+    <section className="hero" id="top" ref={root}>
+      <div className="hero__bg"><img src={hero.photo} alt="" fetchpriority="high" /></div>
+      <div className="hero__overlay" />
+      <div className="hero__inner wrap">
+        <h1 className="hero__title">{hero.title}</h1>
+        <div className="hero__side">
+          <p className="hero__fade">{hero.text}</p>
+          <div className="hero__fade"><Button variant="light" onClick={onQuote}>{site.cta}</Button></div>
         </div>
       </div>
     </section>
   );
 }
 
-/* ---------- 3. О компании ---------- */
-export function About() {
+/* ---------- О компании: текст + вертикальное фото ---------- */
+export function Intro() {
   return (
     <section className="section" id="about">
-      <div className="container about">
-        <div className="about__text reveal">
-          <span className="eyebrow">{about.eyebrow}</span>
-          <h2 className="section__title">{about.title}</h2>
-          {about.paragraphs.map((t) => <p key={t}>{t}</p>)}
-          <ul className="about__stats">
-            {about.stats.map(([num, label]) => <li key={label}><strong>{num}</strong><span>{label}</span></li>)}
-          </ul>
+      <div className="wrap layout">
+        <div className="layout__content">
+          <h2 className="h3 js-lines">{intro.title}</h2>
+          {intro.text.map((t) => <p key={t} className="js-fade">{t}</p>)}
+          <div className="js-fade"><Button href="#catalog">Смотреть каталог</Button></div>
         </div>
-        <div className="about__media reveal">
-          {about.photos.map((src, i) => (
-            <figure key={i} className="gallery__item">
-              {src ? <img src={base + src} alt={`Производство ${i + 1}`} loading="lazy" /> : <PhotoPlaceholder label={i === 0 ? 'Фото цеха' : `Фото ${i + 1}`} />}
-            </figure>
+        <figure className="layout__img js-reveal-img"><img src={intro.photo} alt="" loading="lazy" /></figure>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Крупное заявление + две колонки ---------- */
+export function Statement() {
+  return (
+    <section className="section section--tight">
+      <div className="wrap">
+        <h2 className="h1 js-lines">{statement.title}</h2>
+        <div className="text-grid js-stagger">
+          {statement.columns.map((t) => <p key={t}>{t}</p>)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Каталог: плитка, название проявляется при наведении ---------- */
+export function Catalog() {
+  return (
+    <section className="section" id="catalog">
+      <div className="wrap">
+        <div className="section__head">
+          <h2 className="h2 js-lines">Каталог</h2>
+          <p className="js-fade">{products.length} видов изделий. Нажмите на изделие, чтобы открыть фотографии и характеристики.</p>
+        </div>
+        <div className="catalog js-stagger">
+          {products.map((p, i) => (
+            <a href={`#/product/${p.id}`} key={p.id} className={`tile${i === 0 ? ' tile--wide' : ''}`}>
+              <div className="tile__img"><img src={p.img} alt={p.name} loading="lazy" /></div>
+              <div className="tile__overlay">
+                <span className="tile__tag">{p.tag}</span>
+                <h3 className="tile__name">{p.name}</h3>
+                <span className="tile__more">Подробнее <Arrow /></span>
+              </div>
+              <div className="tile__caption">
+                <span>{p.name}</span>
+                <span>{p.tag}</span>
+              </div>
+            </a>
           ))}
         </div>
       </div>
@@ -122,103 +95,120 @@ export function About() {
   );
 }
 
-/* ---------- 4. Преимущества ---------- */
-export function Advantages() {
-  return (
-    <section className="advantages">
-      <div className="container advantages__grid">
-        {advantages.map((a) => (
-          <div className="adv reveal" key={a.icon}>
-            <span className="ico"><Icon name={a.icon} /></span>
-            <p>{a.text.map((line, i) => <span key={i}>{line}<br /></span>)}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
+/* ---------- Объекты: список-аккордеон, фото следует за курсором ---------- */
+export function Projects({ onQuote }) {
+  const [open, setOpen] = useState(0);
+  const [hover, setHover] = useState(null);
+  const preview = useRef(null);
+  const list = useRef(null);
 
-/* ---------- 5. Порядок работы ---------- */
-export function Process() {
+  useEffect(() => {
+    const el = preview.current;
+    const xTo = gsap.quickTo(el, 'x', { duration: 0.6, ease: 'power3' });
+    const yTo = gsap.quickTo(el, 'y', { duration: 0.6, ease: 'power3' });
+    const onMove = (e) => {
+      const r = list.current.getBoundingClientRect();
+      xTo(e.clientX - r.left);
+      yTo(e.clientY - r.top);
+    };
+    const node = list.current;
+    node.addEventListener('pointermove', onMove);
+    return () => node.removeEventListener('pointermove', onMove);
+  }, []);
+
   return (
-    <section className="section" id="process">
-      <div className="container">
-        <SectionHead eyebrow="Как мы работаем" title="Порядок работы" subtitle="От заявки до поставки на объект" />
-        <div className="process">
-          {process.map((s, i) => (
-            <div className="process__item reveal" key={s.title}>
-              <div className="process__num">{String(i + 1).padStart(2, '0')}</div>
-              <h3>{s.title}</h3>
-              <p>{s.text}</p>
+    <section className="section section--dark" id="projects">
+      <div className="wrap">
+        <div className="section__head">
+          <h2 className="h2 js-lines">Объекты</h2>
+          <p className="js-fade">Несколько проектов, для которых мы изготовили металлоконструкции.</p>
+        </div>
+        <div className="projects" ref={list} onMouseLeave={() => setHover(null)}>
+          <div className={`projects__preview${hover !== null ? ' is-visible' : ''}`} ref={preview} aria-hidden="true">
+            {projects.map((p, i) => <img key={p.name} src={p.img} alt="" className={i === hover ? 'is-active' : ''} />)}
+          </div>
+          {projects.map((p, i) => (
+            <div className={`project${open === i ? ' is-open' : ''}`} key={p.name} onMouseEnter={() => setHover(i)}>
+              <button className="project__row" onClick={() => setOpen(open === i ? -1 : i)} aria-expanded={open === i}>
+                <span className="project__name">{p.name}</span>
+                <span className="project__tags">{p.tags}</span>
+                <span className="project__place">{p.place}</span>
+                <span className="project__year">{p.year}</span>
+                <span className="project__icon" aria-hidden="true" />
+              </button>
+              <div className="project__body">
+                <div>
+                  <p>{p.text}</p>
+                  <img src={p.img} alt="" loading="lazy" className="project__img-mob" />
+                </div>
+              </div>
             </div>
           ))}
         </div>
+        <div className="projects__foot js-fade"><Button variant="light" onClick={() => onQuote()}>Обсудить ваш объект</Button></div>
       </div>
     </section>
   );
 }
 
-/* ---------- 6. Заявка ---------- */
-export function Order({ product, setProduct }) {
-  const [fileLabel, setFileLabel] = useState('');
-  const { errors, status, sending, onSubmit } = useLeadForm(['name', 'phone'], {
-    successText: 'Спасибо! Инженер свяжется с вами в течение рабочего дня.',
-    onSuccess: () => { setFileLabel(''); setProduct(''); },
-  });
-
-  const onFile = (e) => {
-    const f = e.target.files[0];
-    if (f && f.size > MAX_FILE_MB * 1024 * 1024) {
-      e.target.value = '';
-      setFileLabel(`Файл больше ${MAX_FILE_MB} МБ`);
-      return;
-    }
-    setFileLabel(f ? f.name : '');
-  };
-
+/* ---------- Цифры + фото со смещением ---------- */
+export function Numbers() {
   return (
-    <section className="order" id="order">
-      <div className="order__glow" aria-hidden="true" />
-      <div className="container order__inner">
-        <div className="order__text reveal">
-          <span className="eyebrow">Расчёт за 1 рабочий день</span>
-          <h2 className="section__title">Запросить расчёт стоимости</h2>
-          <p>Прикрепите чертёж или спецификацию - инженер подготовит коммерческое предложение с ценой и сроками изготовления.</p>
-          <ul className="checklist">
-            <li><Icon name="check" />Работаем с юрлицами по договору</li>
-            <li><Icon name="check" />Полный пакет документов и сертификаты</li>
-            <li><Icon name="check" />Доставка на объект по всему Узбекистану</li>
-          </ul>
+    <section className="section">
+      <div className="wrap">
+        <h2 className="h1 js-lines">{numbers.title}</h2>
+        <div className="offset">
+          <figure className="offset__a js-reveal-img"><img src={numbers.photos[0]} alt="" loading="lazy" data-parallax="6" /></figure>
+          <figure className="offset__b js-reveal-img"><img src={numbers.photos[1]} alt="" loading="lazy" data-parallax="6" /></figure>
         </div>
-        <form className="form reveal" onSubmit={onSubmit} noValidate encType="multipart/form-data">
-          <FormMeta source="Заявка на расчёт" />
-          <div className="form__row">
-            <Field label="Ваше имя *" error={errors.name}><input type="text" name="name" placeholder="Имя" /></Field>
-            <Field label="Компания"><input type="text" name="company" placeholder="Название" /></Field>
-          </div>
-          <div className="form__row">
-            <Field label="Телефон *" error={errors.phone}><PhoneInput /></Field>
-            <Field label="Количество"><input type="text" name="quantity" placeholder="напр. 50 шт / 12 т" /></Field>
-          </div>
-          <Field label="Вид продукции">
-            <select name="product" value={product} onChange={(e) => setProduct(e.target.value)}>
-              <option value="">Выберите или опишите в комментарии</option>
-              {products.map((p) => <option key={p.id} value={p.name}>{p.name}</option>)}
-            </select>
-          </Field>
-          <Field label="Комментарий">
-            <textarea name="comment" placeholder="Сроки, адрес объекта, особые требования" />
-          </Field>
-          <label className={`file${fileLabel ? ' has-file' : ''}`}>
-            <input type="file" name="file" accept={FILE_ACCEPT} onChange={onFile} />
-            <span className="file__icon"><Icon name="clip" /></span>
-            <span className="file__name">{fileLabel || `Прикрепить чертёж / спецификацию (до ${MAX_FILE_MB} МБ)`}</span>
-          </label>
-          <Button as="button" type="submit" arrow className="btn--block" disabled={sending}>Отправить заявку</Button>
-          <p className="form__note">Нажимая кнопку, вы соглашаетесь на обработку персональных данных</p>
-          <FormStatus status={status} />
-        </form>
+        <dl className="stats js-stagger">
+          {numbers.stats.map(([v, l]) => <div key={l}><dt>{v}</dt><dd>{l}</dd></div>)}
+        </dl>
       </div>
     </section>
+  );
+}
+
+/* ---------- Контакты + форма обратной связи ---------- */
+export function Contacts() {
+  const { contacts } = site;
+  return (
+    <section className="section section--dark contacts" id="contacts">
+      <div className="wrap contacts__grid">
+        <div>
+          <h2 className="h2 js-lines">Связаться<br />с нами</h2>
+          <a className="contacts__big js-fade" href={`tel:${contacts.phone.replace(/[^\d+]/g, '')}`}>{contacts.phone}</a>
+          <a className="contacts__big js-fade" href={`mailto:${contacts.email}`}>{contacts.email}</a>
+          <p className="contacts__meta js-fade">{contacts.address}<br />{contacts.hours}</p>
+        </div>
+        <div className="js-fade">
+          <QuoteForm source="Форма обратной связи" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Футер ---------- */
+export function Footer() {
+  const { contacts } = site;
+  return (
+    <footer className="footer">
+      <div className="wrap">
+        <div className="footer__top">
+          <Wordmark className="wordmark--footer" />
+          <nav className="footer__links">
+            {site.nav.map((n) => <a key={n.href} href={n.href}>{n.label}</a>)}
+          </nav>
+          <div className="footer__links">
+            {contacts.socials.map((s) => <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer">{s.label}</a>)}
+          </div>
+        </div>
+        <div className="footer__bottom">
+          <span>&copy; {new Date().getFullYear()} {site.brand}</span>
+          <span>{contacts.address}</span>
+        </div>
+      </div>
+    </footer>
   );
 }

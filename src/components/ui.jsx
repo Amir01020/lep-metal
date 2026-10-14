@@ -1,32 +1,26 @@
-import Icon from '../lib/Icon';
 import { maskPhone } from '../lib/form';
 
-export function Button({ as: Tag = 'a', variant = 'primary', arrow, className = '', children, ...props }) {
-  return (
-    <Tag className={`btn btn--${variant} ${className}`} {...props}>
-      {children}
-      {arrow && <Icon name="arrow" />}
-    </Tag>
-  );
+export function Arrow() {
+  return <svg className="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M8 5h11v11" /></svg>;
 }
 
-export function SectionHead({ eyebrow, title, subtitle, className = '', children }) {
-  return (
-    <div className={`section__head reveal ${className}`}>
-      <div>
-        {eyebrow && <span className="eyebrow">{eyebrow}</span>}
-        <h2 className="section__title">{title}</h2>
-        {subtitle && <p className="section__subtitle">{subtitle}</p>}
-      </div>
-      {children}
-    </div>
+// Кнопка: текст сменяется снизу при наведении, справа квадрат со стрелкой
+export function Button({ href, onClick, variant = 'dark', small, children, type, disabled }) {
+  const cls = `btn btn--${variant}${small ? ' btn--sm' : ''}`;
+  const inner = (
+    <>
+      <span className="btn__label"><span className="btn__roll"><span>{children}</span><span aria-hidden="true">{children}</span></span></span>
+      <span className="btn__icon"><Arrow /></span>
+    </>
   );
+  if (href) return <a href={href} className={cls} onClick={onClick}>{inner}</a>;
+  return <button type={type || 'button'} className={cls} onClick={onClick} disabled={disabled}>{inner}</button>;
 }
 
 export function Field({ label, error, children }) {
   return (
     <label className={`field${error ? ' is-error' : ''}`}>
-      {label && <span>{label}</span>}
+      <span>{label}</span>
       {children}
     </label>
   );
@@ -59,14 +53,5 @@ export function FormStatus({ status }) {
     <p className={`form__status${status.type ? ' is-' + status.type : ''}`} role="status">
       {status.text}
     </p>
-  );
-}
-
-export function PhotoPlaceholder({ label }) {
-  return (
-    <div className="ph">
-      <Icon name="camera" />
-      {label}
-    </div>
   );
 }

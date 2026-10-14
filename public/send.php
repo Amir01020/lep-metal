@@ -14,6 +14,7 @@ if (!empty($_POST['website'])) {
 $cfg = require __DIR__ . '/config.php';
 
 $clean    = fn($v, $len = 300) => htmlspecialchars(trim(mb_substr((string)$v, 0, $len)), ENT_QUOTES, 'UTF-8');
+$source   = $clean($_POST['form'] ?? 'Заявка на расчёт');
 $name     = $clean($_POST['name'] ?? '');
 $company  = $clean($_POST['company'] ?? '');
 $phone    = $clean($_POST['phone'] ?? '');
